@@ -1,98 +1,125 @@
-# TravelTide Customer Segmentation Project
+# Customer Loyalty Segmentation (TravelTide Case Study)
 
-## 📖 Project Overview
-
-TravelTide is a fast-growing e-booking startup that has built one of the largest online travel inventories.  
-While the platform has grown quickly since its launch in 2021, **customer retention remains a challenge**.  
-
-The new Head of Marketing, **Elena Tarrant**, has been tasked with designing a **personalized rewards program** to increase customer loyalty.  
-Our role as the **Analytics team** is to segment customers, validate which rewards are most attractive, and provide **data-driven recommendations** to improve retention.
+This project analyzes customer behavior for **TravelTide**, an online travel booking platform, to support the design of a **personalized loyalty program**.  
+Using SQL-based feature engineering and Tableau visualizations, customers were segmented into actionable groups and matched with initial perk hypotheses to improve retention and campaign targeting.
 
 ---
 
-## 🎯 Business Problem
+## 🎯 Business Objective
 
-- TravelTide has seen strong user growth since 2021, but **growth ≠ loyalty**.  
-- Retention rates fall year over year, and booking users drop sharply (halved after 2 years).  
-- Marketing aims to personalize the rewards program by matching perks to customer segments.  
-- The analytics team must:  
-  1. Verify whether the data supports distinct customer groups with clear perk preferences.  
-  2. Assign each customer a likely "favorite perk."  
-  3. Provide actionable recommendations for personalized marketing campaigns.
+TravelTide has grown rapidly since 2021 but continues to struggle with **customer retention**.  
+Marketing aims to launch a personalized rewards program and needs clear, data-driven answers to:
 
-**Perks considered in the program:**  
+1. **Which distinct customer segments exist?**  
+2. **How do behavior, demographics, and travel patterns differ by segment?**  
+3. **Which perks are likely to resonate with each group?**  
+4. **How should a loyalty program be structured to increase repeat bookings?**
 
-- ❌ Free Cancellation  
-- 🍽 Free Hotel Meal  
-- 🧳 Free Checked Bag  
-- 🏷 Discount Offers  
-- ✈️+🏨 1 Free Hotel Night with Flight  
+Since TravelTide operates only with historical behavioral data (no experimental data available), this project provides **analytically supported segment insights** and **initial perk assignments**, which require validation through controlled testing.
 
 ---
 
-## 🗂 Project Structure
+## 🧠 Approach & Methodology
 
-### Sprint 1: Project Exploration
+### **1. Data Understanding & Cleaning**
 
-- Familiarize with dataset and business context  
-- Exploratory Data Analysis (EDA) using **SQL** and **Tableau**
+- Exploration of user, session, flight, and hotel datasets  
+- Standardization of date fields, durations, prices, and booking flags  
+- Removal or correction of invalid records (e.g., negative nights)
 
-### Sprint 2: Feature Engineering & Segmentation
+### **2. Feature Engineering (SQL)**
 
-- Data preprocessing & feature engineering  
-- Creation of meaningful data metrics (session-based features, travel behavior, demographics)  
-- Segmentation of customers into distinct groups
+Creation of user-level behavioral and pricing metrics, including:
 
-### Sprint 3: Developing Insights & Strategy
+- Booking frequency & cancellation patterns  
+- Session interactions (clicks, minutes, booking speed)  
+- Price sensitivity indicators  
+- Travel characteristics (distance, trip length, weekend vs. weekday travel)  
+- Demographic attributes (age categories)
 
-- Refine segments and identify their preferred perks  
-- Translate insights into **data-driven recommendations**
+### **3. Segmentation Logic**
 
-### Sprint 4: Presenting Results
+A weighted scoring model evaluates each user across behavior and travel attributes.  
+Users are assigned to one of several meaningful groups, including:
 
-- Final project report with clear insights, justification, and strategy  
-- Deliverables: **full report** + **executive summary one-pager**
+- Business Traveler  
+- Family Traveler  
+- Frequent Traveler  
+- Premium Traveler  
+- Budget / Deal Hunter  
+- Dreamer  
+- New / Young Customers  
+- Others (low-signal users)
 
----
+This segmentation is **fully data-driven**, based on engineered features and behavioral scoring.
 
-## 🧩 Segmentation Approach
+### **4. Perk Mapping (Educated Hypothesis)**
 
-- Basis: 👆 **Behavior** | ✈️ **Travel** | 👤 **Demographics**  
-- Outcome: 10 meaningful segments → ⭐ 4 Core | ➕ 5 Supplementary | ⚪ Others  
-- Each segment was matched with a recommended perk.  
-- Core segments: Business, Family, Frequent, Premium  
+The perk assignments are based on behavioral insights from the segmentation and reflect strategic recommendations derived from the observed customer patterns:
 
----
+- segment characteristics  
+- typical industry patterns in travel loyalty programs  
+- inferred customer needs  
 
-## 🛠 Tools & Technologies
-
-- **SQL (Postgres)** → feature engineering, segmentation queries, KPIs  
-- **Tableau** → Exploratory Data Analysis (EDA), visualization of customer patterns  
-- **Google Sheets / Docs** → Executive summary formatting and reporting  
+Since no experimental validation was possible within this project setup, these recommendations should be considered as **initial hypotheses** and would typically be validated through controlled **A/B testing** in a real-world rollout, as outlined in the recommended next steps.
 
 ---
 
 ## 📊 Example Outputs
 
-- Session-based metrics (clicks, booking patterns, trip length, seat booking behavior)  
-- SQL-based segmentation into 10 groups with assigned perks  
-- Tableau dashboards illustrating user behavior and segment distribution  
+- Session-based metrics including clicks, booking behavior, trip length, seat booking patterns  
+- SQL-based segmentation into 10 customer groups with initial perk hypotheses  
+- Tableau dashboards illustrating user behavior, segment distribution, and feature patterns  
 - Deliverables:  
-  - **[Full Report](reports/TravelTide_FullReport_Final.pdf)** – detailed analysis, all 10 segments  
-  - **[Executive Summary](reports/TravelTide_ExecutiveSummary_Final.pdf)** – one-pager for management
-  - **[Segment Definitions](docs/TravelTide_Segment_Definitions.xlsx)** – features and weights per segment
+  - **[Full Report](reports/TravelTide_FullReport_Final.pdf)** – detailed analysis covering all segments  
+  - **[Executive Summary](reports/TravelTide_ExecutiveSummary_Final.pdf)** – one-page management overview  
+  - **[Segment Definitions](docs/TravelTide_Segment_Definitions.xlsx)** – feature summary and scoring logic
+
+---
+
+## 🛠 Tools & Technologies
+
+- **SQL (Postgres)** – feature engineering, segmentation scoring, KPIs  
+- **Tableau** – exploratory analysis, behavior profiles, segment visualization  
+- **Google Sheets / Docs** – stakeholder reporting, executive summary  
+
+---
+
+## 📁 Repository Structure
+
+```text
+/
+├── sql/                            # Segmentation & feature engineering queries
+├── dashboard/                      # Tableau workbook and dashboard exports
+├── docs/                           # Executive summary, segment documentation
+├── img/                            # Project visuals (segments, perk mapping, EDA)
+└── README.md                       # Overview and project documentation
+```
+
+A detailed explanation of the SQL logic, transformations, and scoring model can be found in the  
+👉 **Technical README (`TECHNICAL_README.md`)**.
 
 ---
 
 ## 🚀 Next Steps
 
-- 🧪 Test perks with A/B experiments  
-- 🔄 Refine & validate segment definitions with more data  
-- 🎯 Build a loyalty program around the 4 core segments  
+These steps outline what would realistically follow in a real-world analytics setting and extend the project beyond its fictional constraints:
+
+- **🧪 Validate perk–segment hypotheses with A/B experiments**  
+  (Not possible within this educational project but essential for real deployment.)
+
+- **🔄 Refine & stabilize segment definitions with additional user cohorts**  
+  As new data becomes available, behavioral thresholds and percentiles should be recalibrated.
+
+- **🎯 Build and test a tiered loyalty program focused on the four core segments**  
+  Start with high-confidence segments (e.g., Business, Family, Frequent, Premium) for initial rollout.
+
+- **📈 Monitor behavioral changes over time**  
+  Segment drift and shifts in travel patterns should be incorporated into regular review cycles.
 
 ---
 
 ## 👤 Author
 
 **Thomas Jortzig**  
-TravelTide Mastery Project | 05.09.2025
+Customer Loyalty Segmentation – TravelTide Case Study (09/2025)

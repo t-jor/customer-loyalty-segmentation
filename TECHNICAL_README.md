@@ -1,17 +1,20 @@
-# TravelTide — Technical README (Segmentation Pipeline)
+# Customer Loyalty Segmentation — Technical Documentation (TravelTide)
 
-This document explains how the SQL-based pipeline segments TravelTide users into meaningful customer groups.  
-It complements the `00_master_version_complete.sql` file, which contains the full end-to-end query.
+This technical documentation explains the SQL-based segmentation pipeline used to engineer behavioral features, compute segment scores, and generate the final customer segment assignments for TravelTide.  
+All steps are executed within a **single, self-contained SQL workflow** built using sequential CTEs, ensuring that the entire logic can be reproduced consistently on every run.
+
+The full end-to-end query is available here:  
+👉 [`sql/00_master_version_complete.sql`](sql/00_master_version_complete.sql)
 
 ---
 
 ## 1. Data Preparation
 
-We join session, user, flight, and hotel data into a **session-based table**.  
-Filters applied:  
+Users, sessions, flights, and hotels are joined into a unified **session-level table**.  
+Several filters ensure analytical relevance:
 
 - Only sessions from `2023-01-04` onwards  
-- Users with at least 7 sessions  
+- Users with more than 7 sessions (active user cohort)  
 
 ```sql
 -- Cohort filter
@@ -28,18 +31,22 @@ active_users AS (
 )
 ```
 
+This forms the base for feature engineering at both session and user level.
+
 ---
 
 ## 2. Feature Engineering
 
-From raw attributes, we derive clean and normalized metrics.  
-Key transformations include:  
+A series of transformations creates standardized, comparable behavioral metrics.
+
+### Key transformations include
 
 - Cleaning of negative/zero nights  
 - Fixing discount and booking flags  
 - Deriving trip status (`booked`, `cancelled`, `none`)  
-- Calculating session duration, lead times, flight distances  
-- Categorizing age, stay length, destination type  
+- Session duration and booking lead times  
+- Flight distance and hotel night metrics
+- Categorizing age, trip length, destination type  
 
 ```sql
 -- Example: Nights cleaning
@@ -50,36 +57,39 @@ CASE
 END AS nights_cleaned
 ```
 
-These enrichments build the `session_based_final` CTE, which is the cleaned session-level dataset.
+These enrichments are collected in the `session_based_final` CTE, which is the cleaned session-level dataset.
 
 ---
 
 ## 3. User-Level Aggregations
 
-We aggregate session features into **user-level metrics**:  
+Session metrics are aggregated into **user-level behavior profiles**, including:
 
-- Total bookings, cancellations, discounts  
-- Average minutes/clicks per session  
-- Pricing metrics: flight cost per km, hotel cost per night  
-- Seats, bags, rooms per booking  
-- Night counts and travel frequency (weekend vs. weekday)  
+- Total bookings, cancellations, and discount usage
+- Average session minutes and clicks
+- Booking speed and lead-time indicators
+- Flight cost per km, hotel cost per night  
+- Seats, bags, and room usage per booking  
+- Night counts and travel frequency
+- Weekday vs. weekend travel patterns  
 
 ```sql
 -- Example: average minutes per session
 ROUND(SUM(session_duration_min)::numeric / NULLIF(COUNT(session_id), 0), 4) AS avg_min_per_session
 ```
 
-The result is stored in `user_based_avg`, which provides normalized per-user features.
+The result d´feed into the `user_based_avg` CTE, which provides normalized per-user features.
 
 ---
 
-## 4. Features & Normalization
+## 4. Features Normalization & Behavioral Flags
 
-We create binary flags and normalized values for segmentation:  
+To create comparable dimensions across all users, several normalization steps and percentile-based flags are introduced:
 
-- **Percentile flags**: quick/slow bookers, low/high clickers, short lead times  
-- **Price sensitivity**: p20/p80 of flight/hotel prices  
-- **Condition flags**: dreamers (only cancelled/no bookings), new customers, young/senior travelers  
+- **Percentile flags**: quick/slow bookers, low/high clickers, short/long lead times  
+- **Price sensitivity**: based on p20/p80 of flight or hotel costs  
+- **Demographic indicators**: age brackets, new/young customers  
+- **Behavioral condition flags**: e.g., Dreamers (only cancelled/no bookings)
 
 ```sql
 -- Example: quick booker flag
@@ -93,10 +103,11 @@ END AS is_quick_booker_p20
 
 ---
 
-## 5. Scoring & Segmentation
+## 5. Segmentation Model
 
-We compute weighted scores for each segment.  
-Each user receives a score per segment, then is assigned to the one with the highest score.
+A weighted scoring model evaluates each user across a set of behavioral and demographic features.
+
+Example (Business segment):
 
 ```sql
 -- Business score
@@ -108,16 +119,33 @@ CASE
 END AS score_business
 ```
 
-If all scores are below `0.3`, the user is assigned to **Others**.
+All segment scores are computed in a unified scoring CTE.  
+Each user is then assigned to the **segment with the highest score**, with an additional rule that assigns users to *Others* if all scores fall below a minimum threshold of `0.3`.
 
 Segments include:  
 Business, Family, Frequent Traveler, Premium, Budget, Deal Hunter, Dreamer, New, Young, Others.
 
+These segments match the definitions in the accompanying project reports.
+
 ---
 
-## 6. Final Output
+## 6. Perk Assignment (Hypothesis-Based)
 
-The final query summarizes segment sizes, shares, and perk mapping.  
+Each segment is linked to an **initial perk hypothesis** derived from:
+
+- the behavioral and demographic properties of the segment  
+- patterns typical in travel loyalty programs  
+- inferred user needs  
+
+Because no experimental or causal data is available in this fictional case, the perk assignment represents an **educated guess**, meant to guide marketing strategy — not a validated effect.
+
+Validation would require A/B testing and longitudinal analysis, which is beyond the scope of this project setup.
+
+---
+
+## 7. Final Output
+
+The final query produces the consolidated results (segment sizes, shares, perk mapping) used in the dashboards and reports:
 
 ```sql
 SELECT
@@ -137,13 +165,13 @@ GROUP BY final_segment
 ORDER BY users DESC;
 ```
 
-This output is the **segment-perk summary** used in the final report and executive summary.
+This output aligns with the visualizations and conclusions in the executive summary and full report.
 
 ---
 
-## 7. Validation & Debugging
+## 8. Validation & Debugging
 
-Optional queries in the SQL file allow inspection of intermediate results:  
+Debugging queries are included to inspect intermediate results:
 
 - Per-user assignment (`assigned`)  
 - Feature distributions (`features_norm`)  
@@ -157,19 +185,22 @@ FROM assigned
 ORDER BY score DESC;
 ```
 
+These queries help ensure consistency across transformations and transparency in scoring behavior.
+
 ---
 
-## 8. Reproducibility Notes
+## 9. Reproducibility Notes
 
-- Pipeline is **idempotent**: reruns always produce the same results.  
-- No temp tables, no writes → safe for read-only DBs.  
+- The Pipeline is fully **idempotent** (reruns produce identical results).  
+- No temp tables are created; all logic is defined in CTEs.
 - All `JOIN`s on `trip_id` use `USING(trip_id)` to avoid duplicates.  
-- Percentiles are cohort-based → relative to current dataset.  
-- Tie-breaks in equal scores are resolved alphabetically.  
+- Percentiles are computed per cohort and depend on the dataset's distribution.
+- Tie-breaks in equal scores follow alphabetical order.  
+- Segment definitions and scoring logic correspond to those documented in the project reports.
 
 ---
 
-## 9. Tuning Guide
+## 10. Tuning Guide
 
 Parameters that can be adjusted:  
 
@@ -184,4 +215,4 @@ Parameters that can be adjusted:
 ## 👤 Author
 
 **Thomas Jortzig**  
-TravelTide Mastery Project | 05.09.2025
+TravelTide Segmentation Pipeline — Technical Documentation (09/2025)
