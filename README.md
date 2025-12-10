@@ -1,6 +1,6 @@
 # Customer Loyalty Segmentation & Perk Modeling (TravelTide Case Study)
 
-**Analyzing customer behavior to support the design of a personalized loyalty program for an online travel platform**
+**Analyzing customer behavior to support the design of a personalized loyalty program for an online travel platform**  
 *A SQL-based feature engineering workflow combined with Tableau dashboards to segment customers and evaluate perk hypotheses.*
 
 ---
